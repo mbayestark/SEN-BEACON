@@ -9,6 +9,9 @@ import TrapMap from "./scenes/map";
 import Activity from "./scenes/activity";
 import Temperature from "./scenes/temperature";
 import Timeline from "./scenes/timeline";
+import Devices from "./scenes/devices";
+import Alerts from "./scenes/alerts";
+import Predictions from "./scenes/predictions";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -25,8 +28,11 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/map" element={<TrapMap />} />
                 <Route path="/activity" element={<Activity />} />
+                <Route path="/devices" element={<Devices />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/predictions" element={<Predictions />} />
                 <Route path="/temperature" element={<Temperature />} />
-                <Route path="/timeline" element = {<Timeline/>} />
+                <Route path="/timeline" element={<Timeline />} />
               </Routes>
             </main>
           </div>
