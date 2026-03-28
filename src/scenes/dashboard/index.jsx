@@ -1,19 +1,61 @@
 import { Box, Typography, useTheme, Chip } from "@mui/material";
 import { tokens, semantic } from "../../theme";
-import { dashboardStats, zoneStats } from "../../data/mockData";
+import { dashboardStats, zoneStats, alertsData, deviceRegistry, weeklyTrendData } from "../../data/mockData";
 import Header from "../../components/Header";
-import DevicesOutlinedIcon from "@mui/icons-material/DevicesOutlined";
-import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
-import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
-import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
-import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined";
-import WifiOffOutlinedIcon from "@mui/icons-material/WifiOffOutlined";
+import { Cpu, Map, Bug, AlertCircle, CircleAlert, WifiOff } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  LineChart, Line
 } from "recharts";
 
-const StatCard = ({ title, value, icon, iconColor, tint, borderColor }) => {
+const zoneSparklineColors = {
+  "Technopôle-Pikine": "#F44336",
+  "Grand-Yoff": "#F5A623",
+  "Nord-Foire": "#42A5F5",
+  "Pikine-Guédiawaye": "#4CAF50",
+  "Lac Rose": "#F44336",
+  "Parcelles Assainies": "#F5A623",
+  "Plateau": "#42A5F5",
+  "Rufisque": "#4CAF50",
+  "Richard-Toll": "#F44336",
+  "Saint-Louis Ville": "#42A5F5",
+  "Linguère": "#F5A623",
+  "Louga Ville": "#4CAF50",
+};
+
+const Sparkline = ({ zone }) => {
+  const color = zoneSparklineColors[zone] || "#8899AA";
+  const data = weeklyTrendData.map(d => ({ value: d[zone] ?? 0 }));
+  const last = data[data.length - 1]?.value ?? 0;
+  const prev = data[data.length - 2]?.value ?? 0;
+  const isRising = last > prev;
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      <LineChart width={100} height={36} data={data}>
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke={color}
+          strokeWidth={1.5}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+      <Typography sx={{
+        fontSize: "12px",
+        fontFamily: "IBM Plex Mono, monospace",
+        color: isRising ? "#F44336" : "#4CAF50",
+        lineHeight: 1,
+      }}>
+        {isRising ? "↑" : "↓"}
+      </Typography>
+    </Box>
+  );
+};
+
+const StatCard = ({ title, value, icon, iconColor, tint, borderColor, subtitle }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   return (
@@ -51,8 +93,18 @@ const StatCard = ({ title, value, icon, iconColor, tint, borderColor }) => {
         >
           {title}
         </Typography>
+        {subtitle && (
+          <Typography sx={{
+            fontSize: "11px",
+            fontFamily: "'IBM Plex Mono', monospace",
+            mt: "4px",
+            color: colors.ui.text.tertiary,
+          }}>
+            {subtitle}
+          </Typography>
+        )}
       </Box>
-      <Box color={iconColor} fontSize="32px" sx={{ opacity: 0.7 }}>
+      <Box color={iconColor} sx={{ opacity: 0.7 }}>
         {icon}
       </Box>
     </Box>
@@ -88,53 +140,113 @@ const Dashboard = () => {
 
   const offlineCount = dashboardStats.totalDevices - dashboardStats.activeDevices;
 
+  const criticalAlerts = alertsData.filter(a => a.severity === "critical");
+  const highestRiskZone = [...zoneStats].sort((a, b) => b.totalCatches - a.totalCatches)[0];
+  const offlineDevices = deviceRegistry.filter(d => d.status === "Offline");
+
+  let summary = "";
+  if (criticalAlerts.length > 0) {
+    const zones = [...new Set(criticalAlerts.map(a => a.zone))].join(" and ");
+    summary = `${criticalAlerts.length} critical alert${criticalAlerts.length > 1 ? "s" : ""} active in ${zones}. `;
+  }
+  summary += `Highest vector activity in ${highestRiskZone.zone} (${highestRiskZone.totalCatches.toLocaleString()} catches). `;
+  if (offlineDevices.length > 0) {
+    summary += ` ${offlineDevices.length} device${offlineDevices.length > 1 ? "s" : ""} offline.`;
+  }
+
+  const bannerColor = criticalAlerts.length > 0 ? "#F44336"
+    : offlineDevices.length > 0 ? "#F5A623"
+    : "#4CAF50";
+  const bannerBg = criticalAlerts.length > 0 ? "rgba(244, 67, 54, 0.08)"
+    : offlineDevices.length > 0 ? "rgba(245, 166, 35, 0.08)"
+    : "rgba(76, 175, 80, 0.08)";
+
   return (
     <Box m="20px">
       <Header title="DASHBOARD" subtitle="SEN-BEACON Health Intelligence Overview" />
 
+      {/* SITUATION SUMMARY BANNER */}
+      <Box sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: bannerBg,
+        borderLeft: `3px solid ${bannerColor}`,
+        borderRadius: "4px",
+        padding: "12px 20px",
+        marginBottom: "20px",
+        gap: 2,
+      }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0 }}>
+          {criticalAlerts.length > 0
+            ? <CircleAlert size={14} color="#F44336" />
+            : offlineDevices.length > 0
+              ? <AlertCircle size={14} color="#F5A623" />
+              : <AlertCircle size={14} color="#4CAF50" />
+          }
+          <Typography sx={{
+            fontSize: "11px",
+            color: "text.secondary",
+            fontFamily: "IBM Plex Mono, monospace",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}>
+            Situation — {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </Typography>
+        </Box>
+        <Typography sx={{
+          fontSize: "14px",
+          color: "text.primary",
+          fontFamily: "IBM Plex Sans, sans-serif",
+          lineHeight: 1.5,
+        }}>
+          {summary}
+        </Typography>
+      </Box>
+
       {/* STAT CARDS */}
       <Box
         display="grid"
-        gridTemplateColumns="repeat(6, 1fr)"
+        gridTemplateColumns={{ xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(5, 1fr)" }}
         gap="16px"
         mb="20px"
       >
         <StatCard
           title="Active Devices"
           value={`${dashboardStats.activeDevices} / ${dashboardStats.totalDevices}`}
-          icon={<DevicesOutlinedIcon fontSize="inherit" />}
+          icon={<Cpu size={32} />}
           iconColor={semantic.status.online}
         />
         <StatCard
           title="Zones Monitored"
           value={dashboardStats.zonesMonitored}
-          icon={<PublicOutlinedIcon fontSize="inherit" />}
+          icon={<Map size={32} />}
           iconColor={colors.ui.text.secondary}
         />
         <StatCard
           title="Catches Today"
           value={dashboardStats.totalCatchesToday.toLocaleString()}
-          icon={<BugReportOutlinedIcon fontSize="inherit" />}
+          icon={<Bug size={32} />}
           iconColor={colors.ui.text.secondary}
         />
+        {/* Combined Alerts card */}
         <StatCard
-          title="Active Alerts"
+          title="Alerts"
           value={dashboardStats.activeAlerts}
-          icon={<NotificationsActiveOutlinedIcon fontSize="inherit" />}
-          iconColor={semantic.status.warning}
-        />
-        <StatCard
-          title="Critical Alerts"
-          value={dashboardStats.criticalAlerts}
-          icon={<ErrorOutlineOutlinedIcon fontSize="inherit" />}
-          iconColor={semantic.status.critical}
+          icon={<AlertCircle size={32} />}
+          iconColor={dashboardStats.criticalAlerts > 0 ? semantic.status.critical : semantic.status.warning}
           tint={dashboardStats.criticalAlerts > 0 ? "rgba(244, 67, 54, 0.08)" : undefined}
           borderColor={dashboardStats.criticalAlerts > 0 ? semantic.status.critical : undefined}
+          subtitle={<>
+            <span style={{ color: semantic.status.critical }}>{dashboardStats.criticalAlerts} critical</span>
+            {" · "}
+            <span style={{ color: semantic.status.warning }}>{dashboardStats.activeAlerts - dashboardStats.criticalAlerts} warning</span>
+          </>}
         />
         <StatCard
           title="Offline Devices"
           value={offlineCount}
-          icon={<WifiOffOutlinedIcon fontSize="inherit" />}
+          icon={<WifiOff size={32} />}
           iconColor={semantic.status.warning}
           tint={offlineCount > 0 ? "rgba(245, 166, 35, 0.08)" : undefined}
           borderColor={offlineCount > 0 ? semantic.status.warning : undefined}
@@ -144,7 +256,7 @@ const Dashboard = () => {
       {/* CHARTS ROW */}
       <Box
         display="grid"
-        gridTemplateColumns="2fr 1fr"
+        gridTemplateColumns={{ xs: "1fr", md: "2fr 1fr" }}
         gap="16px"
         mb="20px"
       >
@@ -249,10 +361,11 @@ const Dashboard = () => {
         >
           Zone Risk Summary
         </Typography>
-        <Box component="table" width="100%" sx={{ borderCollapse: "collapse" }}>
+        <Box sx={{ overflowX: "auto" }}>
+        <Box component="table" width="100%" sx={{ borderCollapse: "collapse", minWidth: "700px" }}>
           <Box component="thead">
             <Box component="tr" sx={{ borderBottom: `1px solid ${colors.ui.border.default}` }}>
-              {["Zone", "Total Catches", "Dominant Species", "Risk Level", "Devices"].map((h) => (
+              {["Zone", "Total Catches", "Dominant Species", "Risk Level", "Devices", "Trend"].map((h) => (
                 <Box
                   component="th"
                   key={h}
@@ -322,9 +435,13 @@ const Dashboard = () => {
                 >
                   {zone.devicesOnline} / {zone.devicesTotal}
                 </Box>
+                <Box component="td" sx={{ p: "12px 20px" }}>
+                  <Sparkline zone={zone.zone} />
+                </Box>
               </Box>
             ))}
           </Box>
+        </Box>
         </Box>
       </Box>
     </Box>

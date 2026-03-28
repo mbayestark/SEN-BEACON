@@ -2,12 +2,7 @@ import { Box, IconButton, useTheme } from "@mui/material";
 import { useContext } from "react";
 import { ColorModeContext, tokens } from "../../theme";
 import InputBase from "@mui/material/InputBase";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import SearchIcon from "@mui/icons-material/Search";
+import { Sun, Moon, Bell, Settings, User, Search } from "lucide-react";
 
 const Topbar = () => {
   const theme = useTheme();
@@ -25,7 +20,7 @@ const Topbar = () => {
       >
         <InputBase sx={{ ml: 2, flex: 1, color: colors.ui.text.primary }} placeholder="Search" />
         <IconButton type="button" sx={{ p: 1, color: colors.ui.text.tertiary }}>
-          <SearchIcon />
+          <Search size={20} />
         </IconButton>
       </Box>
 
@@ -33,19 +28,19 @@ const Topbar = () => {
       <Box display="flex">
         <IconButton onClick={colorMode.toggleColorMode} sx={{ color: colors.ui.text.secondary }}>
           {theme.palette.mode === "dark" ? (
-            <DarkModeOutlinedIcon />
+            <Moon size={20} />
           ) : (
-            <LightModeOutlinedIcon />
+            <Sun size={20} />
           )}
         </IconButton>
         <IconButton sx={{ color: colors.ui.text.secondary }}>
-          <NotificationsOutlinedIcon />
+          <Bell size={20} />
         </IconButton>
         <IconButton sx={{ color: colors.ui.text.secondary }}>
-          <SettingsOutlinedIcon />
+          <Settings size={20} />
         </IconButton>
         <IconButton sx={{ color: colors.ui.text.secondary }}>
-          <PersonOutlinedIcon />
+          <User size={20} />
         </IconButton>
       </Box>
     </Box>

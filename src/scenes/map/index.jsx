@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Box, Typography, useTheme, Chip, ToggleButton, ToggleButtonGroup,
-  FormControl, Select, MenuItem, Slider, Button,
+  FormControl, Select, MenuItem, Slider, Button, Dialog, DialogContent, DialogActions,
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -9,15 +9,14 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import { tokens, semantic } from "../../theme";
 import Header from "../../components/Header";
+import { selectSx, menuPropsSx } from "../../components/selectStyles";
+import html2pdf from "html2pdf.js";
+import PrintableReport from "../../components/PrintableReport";
 import {
   deviceRegistry, zoneStats, mosquitoActivityByDevice,
-  serviceHygieneZones, senegalAdmin,
+  serviceHygieneZones, senegalAdmin, alertsData, weeklyTrendData,
 } from "../../data/mockData";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import GrainOutlinedIcon from "@mui/icons-material/GrainOutlined";
-import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
-import GpsFixedOutlinedIcon from "@mui/icons-material/GpsFixedOutlined";
-import ClearOutlinedIcon from "@mui/icons-material/ClearOutlined";
+import { MapPin, Flame, TriangleAlert, Crosshair, X, FileText } from "lucide-react";
 
 // Fix default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -144,25 +143,6 @@ const FitBounds = ({ devices, active }) => {
   return null;
 };
 
-const selectSx = (colors) => ({
-  backgroundColor: colors.ui.bg.surface,
-  color: colors.ui.text.primary,
-  border: `1px solid ${colors.ui.border.default}`,
-  fontFamily: "'IBM Plex Sans', sans-serif",
-  fontSize: "13px",
-  height: "36px",
-  "& .MuiSelect-icon": { color: colors.ui.text.tertiary },
-});
-
-const menuPropsSx = (colors) => ({
-  PaperProps: {
-    sx: {
-      backgroundColor: colors.ui.bg.elevated,
-      color: colors.ui.text.primary,
-    },
-  },
-});
-
 const TrapMap = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -183,6 +163,41 @@ const TrapMap = () => {
   const [radiusCenter, setRadiusCenter] = useState(null);
   const [radiusKm, setRadiusKm] = useState(5);
   const [shouldFit, setShouldFit] = useState(false);
+
+  const reportRef = useRef();
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const handleOpenPreview = () => {
+    setPreviewOpen(true);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+  };
+
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = () => {
+    const element = reportRef.current;
+    if (!element || downloading) return;
+    setDownloading(true);
+    const filename = `SEN-BEACON_Zone_Report_${selectedRegion !== "all" ? selectedRegion : "All"}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    // Small delay to ensure map tiles are fully rendered before capture
+    setTimeout(() => {
+      html2pdf()
+        .set({
+          margin: 0,
+          filename,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        })
+        .from(element)
+        .save()
+        .then(() => setDownloading(false))
+        .catch(() => setDownloading(false));
+    }, 500);
+  };
 
   const departments = selectedRegion !== "all" ? senegalAdmin[selectedRegion] || [] : [];
   const hasActiveFilter = selectedRegion !== "all" || selectedDepartment !== "all" || (radiusMode && radiusCenter);
@@ -285,15 +300,15 @@ const TrapMap = () => {
           }}
         >
           <ToggleButton value="markers">
-            <PlaceOutlinedIcon sx={{ fontSize: 18, mr: 0.5 }} />
+            <MapPin size={16} style={{ marginRight: 4 }} />
             Markers
           </ToggleButton>
           <ToggleButton value="heatmap">
-            <GrainOutlinedIcon sx={{ fontSize: 18, mr: 0.5 }} />
+            <Flame size={16} style={{ marginRight: 4 }} />
             Heatmap
           </ToggleButton>
           <ToggleButton value="zones">
-            <WarningAmberOutlinedIcon sx={{ fontSize: 18, mr: 0.5 }} />
+            <TriangleAlert size={16} style={{ marginRight: 4 }} />
             Risk Zones
           </ToggleButton>
         </ToggleButtonGroup>
@@ -316,7 +331,7 @@ const TrapMap = () => {
           <Select
             value={selectedRegion}
             onChange={handleRegionChange}
-            sx={selectSx(colors)}
+            sx={{ ...selectSx(colors), height: "36px" }}
             MenuProps={menuPropsSx(colors)}
           >
             <MenuItem value="all">All Regions</MenuItem>
@@ -334,6 +349,7 @@ const TrapMap = () => {
             disabled={selectedRegion === "all"}
             sx={{
               ...selectSx(colors),
+              height: "36px",
               opacity: selectedRegion === "all" ? 0.5 : 1,
             }}
             MenuProps={menuPropsSx(colors)}
@@ -370,7 +386,7 @@ const TrapMap = () => {
             },
           }}
         >
-          <GpsFixedOutlinedIcon sx={{ fontSize: 18, mr: 0.5 }} />
+          <Crosshair size={16} style={{ marginRight: 4 }} />
           Radius
         </ToggleButton>
 
@@ -399,12 +415,32 @@ const TrapMap = () => {
           </>
         )}
 
+        {/* Export Zone Report */}
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={handleOpenPreview}
+          disabled={selectedRegion === "all"}
+          sx={{
+            borderColor: "#00C9B1",
+            color: "#00C9B1",
+            fontFamily: "IBM Plex Mono, monospace",
+            fontSize: "11px",
+            letterSpacing: "0.05em",
+            textTransform: "none",
+            "&:hover": { borderColor: "#00C9B1", background: "rgba(0,201,177,0.08)" },
+            "&.Mui-disabled": { opacity: 0.3 },
+          }}
+        >
+          <FileText size={14} style={{ marginRight: 4 }} /> Export Zone Report
+        </Button>
+
         {/* Clear all */}
         {hasActiveFilter && (
           <Button
             onClick={handleClearFilters}
             size="small"
-            startIcon={<ClearOutlinedIcon sx={{ fontSize: 16 }} />}
+            startIcon={<X size={14} />}
             sx={{
               color: colors.ui.text.secondary,
               textTransform: "none",
@@ -438,7 +474,7 @@ const TrapMap = () => {
 
       {/* MAP */}
       <Box
-        height="65vh"
+        height={{ xs: "50vh", md: "65vh" }}
         borderRadius="4px"
         overflow="hidden"
         border={`1px solid ${colors.ui.border.default}`}
@@ -720,6 +756,57 @@ const TrapMap = () => {
           </Box>
         )}
       </Box>
+
+      {/* Report preview dialog */}
+      <Dialog
+        open={previewOpen}
+        onClose={handleClosePreview}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "#fff",
+            maxHeight: "90vh",
+          },
+        }}
+      >
+        <DialogContent sx={{ p: 0, overflow: "auto" }}>
+          <PrintableReport
+            ref={reportRef}
+            zone={selectedRegion !== "all" ? selectedRegion : null}
+            devices={deviceRegistry}
+            alerts={alertsData}
+            zoneStats={zoneStats}
+            weeklyTrendData={weeklyTrendData}
+            visible={previewOpen}
+          />
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: "#fff", borderTop: "1px solid #eee", px: 3, py: 1.5 }}>
+          <Button
+            onClick={handleClosePreview}
+            size="small"
+            sx={{ color: "#666", textTransform: "none" }}
+          >
+            Close
+          </Button>
+          <Button
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            variant="contained"
+            size="small"
+            sx={{
+              backgroundColor: "#00C9B1",
+              color: "#fff",
+              textTransform: "none",
+              fontFamily: "IBM Plex Mono, monospace",
+              fontSize: "12px",
+              "&:hover": { backgroundColor: "#00B3A0" },
+            }}
+          >
+            {downloading ? "Generating…" : "Download PDF"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

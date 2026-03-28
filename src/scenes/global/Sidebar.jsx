@@ -1,20 +1,14 @@
 import { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
-import { Box, IconButton, Typography, useTheme, Chip } from "@mui/material";
+import { Box, IconButton, Typography, useTheme, Divider } from "@mui/material";
 import { Link } from "react-router-dom";
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../theme";
 import SenBeaconLogo from "../../components/SenBeaconLogo";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import ThermostatOutlinedIcon from "@mui/icons-material/ThermostatOutlined";
-import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
-import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
-import DevicesOutlinedIcon from "@mui/icons-material/DevicesOutlined";
-import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
-import AutoGraphOutlinedIcon from "@mui/icons-material/AutoGraphOutlined";
-import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
+import {
+  LayoutDashboard, Map, Bug, Cpu, AlertCircle,
+  Thermometer, Activity, Zap, Menu as MenuIcon,
+} from "lucide-react";
 
 const Item = ({ title, to, icon, selected, setSelected, badge }) => {
   const theme = useTheme();
@@ -29,23 +23,39 @@ const Item = ({ title, to, icon, selected, setSelected, badge }) => {
       <Box display="flex" alignItems="center" gap="8px">
         <Typography>{title}</Typography>
         {badge && (
-          <Chip
-            label={badge}
-            size="small"
-            sx={{
-              height: "18px",
-              fontSize: "10px",
-              fontWeight: 600,
-              backgroundColor: "#42A5F5",
-              color: "#0A0E1A",
-            }}
-          />
+          <Box sx={{
+            fontSize: "9px",
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            background: "rgba(0,201,177,0.15)",
+            color: "#00C9B1",
+            padding: "2px 6px",
+            borderRadius: "3px",
+            marginLeft: "auto",
+          }}>
+            {badge}
+          </Box>
         )}
       </Box>
       <Link to={to} />
     </MenuItem>
   );
 };
+
+const SectionLabel = ({ label }) => (
+  <Typography sx={{
+    fontSize: "10px",
+    fontWeight: 500,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: "text.disabled",
+    padding: "16px 20px 6px",
+    fontFamily: "IBM Plex Mono, monospace",
+  }}>
+    {label}
+  </Typography>
+);
 
 const Sidebar = () => {
   const theme = useTheme();
@@ -79,7 +89,7 @@ const Sidebar = () => {
           {/* LOGO AND MENU ICON */}
           <MenuItem
             onClick={() => setIsCollapsed(!isCollapsed)}
-            icon={isCollapsed ? <MenuOutlinedIcon /> : undefined}
+            icon={isCollapsed ? <MenuIcon size={20} /> : undefined}
             style={{ margin: "10px 0 20px 0", color: colors.ui.text.primary }}
           >
             {!isCollapsed && (
@@ -91,7 +101,7 @@ const Sidebar = () => {
               >
                 <SenBeaconLogo fontSize="20px" />
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
-                  <MenuOutlinedIcon />
+                  <MenuIcon size={20} />
                 </IconButton>
               </Box>
             )}
@@ -101,9 +111,7 @@ const Sidebar = () => {
           {!isCollapsed && (
             <Box mb="25px">
               <Box display="flex" justifyContent="center" alignItems="center">
-                <BugReportOutlinedIcon
-                  sx={{ fontSize: "60px", color: colors.ui.text.tertiary }}
-                />
+                <Bug size={48} color={colors.ui.text.tertiary} strokeWidth={1.5} />
               </Box>
               <Box textAlign="center">
                 <Typography
@@ -117,93 +125,73 @@ const Sidebar = () => {
             </Box>
           )}
 
-          {/* MENU ITEMS — OPERATIONAL */}
+          {/* MENU ITEMS */}
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+            {/* OVERVIEW */}
+            <SectionLabel label="Overview" />
             <Item
               title="Dashboard"
               to="/"
-              icon={<HomeOutlinedIcon />}
+              icon={<LayoutDashboard size={18} />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Map & Heatmap"
+              to="/map"
+              icon={<Map size={18} />}
               selected={selected}
               setSelected={setSelected}
             />
 
-            <Typography
-              variant="h6"
-              color={colors.ui.text.tertiary}
-              sx={{ m: "15px 0 5px 20px", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 400 }}
-            >
-              Monitoring
-            </Typography>
-            <Item
-              title="Device Map"
-              to="/map"
-              icon={<MapOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+            <Divider sx={{ borderColor: "rgba(255,255,255,0.06)", margin: "8px 0" }} />
+
+            {/* MONITORING */}
+            <SectionLabel label="Monitoring" />
             <Item
               title="Vector Activity"
               to="/activity"
-              icon={<BarChartOutlinedIcon />}
+              icon={<Bug size={18} />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="Field Devices"
               to="/devices"
-              icon={<DevicesOutlinedIcon />}
+              icon={<Cpu size={18} />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="Alerts"
               to="/alerts"
-              icon={<NotificationsActiveOutlinedIcon />}
+              icon={<AlertCircle size={18} />}
               selected={selected}
               setSelected={setSelected}
             />
-
-            <Typography
-              variant="h6"
-              color={colors.ui.text.tertiary}
-              sx={{ m: "15px 0 5px 20px", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 400 }}
-            >
-              Data
-            </Typography>
             <Item
               title="Environmental Data"
               to="/temperature"
-              icon={<ThermostatOutlinedIcon />}
+              icon={<Thermometer size={18} />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="Activity Timeline"
               to="/timeline"
-              icon={<TimelineOutlinedIcon />}
+              icon={<Activity size={18} />}
               selected={selected}
               setSelected={setSelected}
             />
 
-            {/* SEPARATOR */}
-            <Box
-              sx={{
-                borderTop: `1px solid ${colors.ui.border.default}`,
-                m: "15px 20px 10px 20px",
-              }}
-            />
+            <Divider sx={{ borderColor: "rgba(255,255,255,0.06)", margin: "8px 0" }} />
 
-            <Typography
-              variant="h6"
-              color={colors.ui.text.tertiary}
-              sx={{ m: "5px 0 5px 20px", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 400 }}
-            >
-              Intelligence
-            </Typography>
+            {/* INTELLIGENCE */}
+            <SectionLabel label="Intelligence" />
             <Item
               title="AI Predictions"
               to="/predictions"
-              icon={<AutoGraphOutlinedIcon />}
+              icon={<Zap size={18} />}
               selected={selected}
               setSelected={setSelected}
               badge="Preview"

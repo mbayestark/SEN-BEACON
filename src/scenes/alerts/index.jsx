@@ -3,41 +3,57 @@ import { Box, Typography, useTheme, Chip, Button } from "@mui/material";
 import { tokens, semantic } from "../../theme";
 import Header from "../../components/Header";
 import { alertsData } from "../../data/mockData";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { CircleAlert, AlertCircle, TriangleAlert, Info } from "lucide-react";
 
 const severityConfig = {
   critical: {
     color: semantic.status.critical,
     bg: "rgba(244, 67, 54, 0.06)",
-    icon: <ErrorOutlineIcon />,
+    icon: <CircleAlert size={16} color="#F44336" />,
     label: "Critical",
   },
   high: {
     color: semantic.risk.high,
     bg: "rgba(255, 107, 53, 0.06)",
-    icon: <WarningAmberIcon />,
+    icon: <AlertCircle size={16} color="#FF6B35" />,
     label: "High",
   },
   warning: {
     color: semantic.status.warning,
     bg: "rgba(245, 166, 35, 0.06)",
-    icon: <WarningAmberIcon />,
+    icon: <TriangleAlert size={16} color="#F5A623" />,
     label: "Warning",
   },
   info: {
     color: "#42A5F5",
     bg: "rgba(66, 165, 245, 0.06)",
-    icon: <InfoOutlinedIcon />,
+    icon: <Info size={16} color="#42A5F5" />,
     label: "Info",
   },
 };
 
+const severityColor = {
+  critical: "#F44336",
+  high: "#FF6B35",
+  warning: "#F5A623",
+  info: "#42A5F5",
+};
+
+const recommendedActions = {
+  "High Anopheles activity": "Deploy indoor residual spraying. Notify district health officer.",
+  "High Aedes aegypti activity": "Eliminate standing water sources in zone. Issue dengue prevention advisory.",
+  "Device offline": "Send field technician to inspect device. Check power supply and connectivity.",
+  "Low battery": "Schedule battery replacement within 24 hours. Monitor remotely until serviced.",
+  "High Culex activity": "Inspect drainage systems and sewage infrastructure. Apply larvicide treatment.",
+};
+
+const getAction = (type) =>
+  recommendedActions[type] ?? "Investigate and report to district health officer.";
+
 const severityOrder = { critical: 0, high: 1, warning: 2, info: 3 };
 
 const formatRelativeTime = (timestamp) => {
-  const now = new Date("2026-03-27T22:00:00Z");
+  const now = new Date();
   const then = new Date(timestamp);
   const diffMs = now - then;
   const diffMin = Math.round(diffMs / 60000);
@@ -110,6 +126,7 @@ const Alerts = () => {
               display="flex"
               alignItems="flex-start"
               gap="16px"
+              flexWrap="wrap"
             >
               <Box color={config.color} mt="2px">
                 {config.icon}
@@ -162,6 +179,31 @@ const Alerts = () => {
               >
                 {formatRelativeTime(alert.timestamp)}
               </Typography>
+              <Box sx={{
+                borderTop: `0.5px solid ${severityColor[alert.severity] ?? "#8899AA"}33`,
+                marginTop: "10px",
+                paddingTop: "10px",
+                width: "100%",
+              }}>
+                <Typography sx={{
+                  fontSize: "11px",
+                  color: colors.ui.text.disabled,
+                  fontFamily: "IBM Plex Mono, monospace",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  marginBottom: "4px",
+                }}>
+                  → Recommended action
+                </Typography>
+                <Typography sx={{
+                  fontSize: "12px",
+                  color: colors.ui.text.secondary,
+                  fontStyle: "italic",
+                  lineHeight: 1.6,
+                }}>
+                  {getAction(alert.type)}
+                </Typography>
+              </Box>
             </Box>
           );
         })}

@@ -2,6 +2,7 @@ import { Box, Typography, useTheme, LinearProgress } from "@mui/material";
 import { tokens, semantic } from "../../theme";
 import Header from "../../components/Header";
 import { deviceRegistry, mosquitoActivityByDevice } from "../../data/mockData";
+import { Wifi, WifiOff, BatteryLow } from "lucide-react";
 
 const getDominantSpecies = (deviceId) => {
   const activity = mosquitoActivityByDevice[deviceId];
@@ -31,51 +32,20 @@ const onlineCount = deviceRegistry.filter((d) => d.status === "Online").length;
 
 const columns = ["Device ID", "Location", "Zone", "Status", "Battery", "Dominant Species", "Last Ping", "Catches Today"];
 
-const StatusDot = ({ status, battery }) => {
-  if (status === "Offline") {
-    // Hollow gray circle for offline
-    return (
-      <Box
-        component="span"
-        sx={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-        }}
-      >
-        <Box
-          sx={{
-            width: "10px",
-            height: "10px",
-            borderRadius: "50%",
-            border: `2px solid ${semantic.status.offline}`,
-            backgroundColor: "transparent",
-          }}
-        />
-        <Typography fontSize="12px" color={semantic.status.offline}>{status}</Typography>
-      </Box>
-    );
-  }
-  // Filled dot for online/warning
-  const dotColor = battery < 20 ? semantic.status.warning : semantic.status.online;
+const StatusCell = ({ status, battery }) => {
+  if (status === "Offline") return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: semantic.status.offline }}>
+      <WifiOff size={13} /> <Typography fontSize="12px" color="inherit">Offline</Typography>
+    </Box>
+  );
+  if (battery < 20) return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: semantic.status.warning }}>
+      <BatteryLow size={13} /> <Typography fontSize="12px" color="inherit">Online</Typography>
+    </Box>
+  );
   return (
-    <Box
-      component="span"
-      sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-      }}
-    >
-      <Box
-        sx={{
-          width: "10px",
-          height: "10px",
-          borderRadius: "50%",
-          backgroundColor: dotColor,
-        }}
-      />
-      <Typography fontSize="12px" color={dotColor}>{status}</Typography>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: semantic.status.online }}>
+      <Wifi size={13} /> <Typography fontSize="12px" color="inherit">Online</Typography>
     </Box>
   );
 };
@@ -115,7 +85,8 @@ const Devices = () => {
         </Box>
 
         {/* TABLE */}
-        <Box component="table" width="100%" sx={{ borderCollapse: "collapse" }}>
+        <Box sx={{ overflowX: "auto" }}>
+        <Box component="table" width="100%" sx={{ borderCollapse: "collapse", minWidth: "800px" }}>
           <Box component="thead">
             <Box component="tr" sx={{ borderBottom: `1px solid ${colors.ui.border.default}` }}>
               {columns.map((h) => (
@@ -166,7 +137,7 @@ const Devices = () => {
                   {device.zone}
                 </Box>
                 <Box component="td" sx={{ p: "12px 16px" }}>
-                  <StatusDot status={device.status} battery={device.battery} />
+                  <StatusCell status={device.status} battery={device.battery} />
                 </Box>
                 <Box component="td" sx={{ p: "12px 16px", minWidth: 130 }}>
                   <Box display="flex" alignItems="center" gap="8px">
@@ -219,6 +190,7 @@ const Devices = () => {
               </Box>
             ))}
           </Box>
+        </Box>
         </Box>
       </Box>
     </Box>

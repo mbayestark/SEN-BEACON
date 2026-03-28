@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, useTheme, FormControl, Select, MenuItem } from "@mui/material";
 import { tokens, semantic } from "../../theme";
 import Header from "../../components/Header";
+import { selectSx, menuPropsSx } from "../../components/selectStyles";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, ReferenceLine
@@ -99,15 +100,6 @@ const environmentalByRegion = {
 
 const regions = Object.keys(environmentalByRegion);
 
-const selectSx = (colors) => ({
-  backgroundColor: colors.ui.bg.surface,
-  color: colors.ui.text.primary,
-  border: `1px solid ${colors.ui.border.default}`,
-  fontFamily: "'IBM Plex Sans', sans-serif",
-  fontSize: "13px",
-  "& .MuiSelect-icon": { color: colors.ui.text.tertiary },
-});
-
 const Temperature = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -125,14 +117,7 @@ const Temperature = () => {
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
             sx={selectSx(colors)}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  backgroundColor: colors.ui.bg.elevated,
-                  color: colors.ui.text.primary,
-                },
-              },
-            }}
+            MenuProps={menuPropsSx(colors)}
           >
             {regions.map((r) => (
               <MenuItem key={r} value={r}>

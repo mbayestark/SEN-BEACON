@@ -6,9 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, ReferenceLine,
 } from "recharts";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
+import { TrendingUp, TrendingDown, Minus, Zap, CheckCircle, Circle } from "lucide-react";
 
 const riskScoreColor = (score) => {
   if (score <= 30) return semantic.risk.low;
@@ -18,9 +16,9 @@ const riskScoreColor = (score) => {
 };
 
 const trendIcon = (trend) => {
-  if (trend === "rising") return <TrendingUpIcon sx={{ fontSize: 20 }} />;
-  if (trend === "falling") return <TrendingDownIcon sx={{ fontSize: 20 }} />;
-  return <TrendingFlatIcon sx={{ fontSize: 20 }} />;
+  if (trend === "rising") return <TrendingUp size={20} />;
+  if (trend === "falling") return <TrendingDown size={20} />;
+  return <Minus size={20} />;
 };
 
 const dataSources = [
@@ -48,7 +46,9 @@ const Predictions = () => {
         mb="20px"
       >
         <Typography fontWeight="600" fontSize="14px" color="#42A5F5" mb="4px">
-          {"\u26A1"} AI-Powered Predictions — Future Vision
+          <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+            <Zap size={16} /> AI-Powered Predictions — Future Vision
+          </Box>
         </Typography>
         <Typography fontSize="11px" color={colors.ui.text.tertiary} lineHeight={1.6}>
           This view is a prototype showing what SEN-BEACON will look like once the prediction
@@ -60,7 +60,7 @@ const Predictions = () => {
       {/* RISK SCORE CARDS */}
       <Box
         display="grid"
-        gridTemplateColumns="repeat(4, 1fr)"
+        gridTemplateColumns={{ xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }}
         gap="16px"
         mb="20px"
       >
@@ -201,13 +201,10 @@ const Predictions = () => {
         </Typography>
         {dataSources.map((source, i) => (
           <Box key={i} display="flex" alignItems="center" gap="10px" mb="6px">
-            <Typography
-              fontSize="14px"
-              color={source.available ? semantic.status.online : colors.ui.text.tertiary}
-              sx={{ fontFamily: "'IBM Plex Mono', monospace", width: "16px" }}
-            >
-              {source.available ? "\u2713" : "\u25CB"}
-            </Typography>
+            {source.available
+              ? <CheckCircle size={14} color={semantic.status.online} />
+              : <Circle size={14} color={colors.ui.text.tertiary} />
+            }
             <Typography
               fontSize="12px"
               color={source.available ? colors.ui.text.primary : colors.ui.text.tertiary}
