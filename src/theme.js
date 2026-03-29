@@ -45,6 +45,8 @@ export const semantic = {
     "Almadies-Ngor": "#4CAF50",
     "Gorée": "#66BB6A",
     "Thiès": "#8D6E63",
+    "Pout": "#A1887F",
+    "Kayar": "#5D4037",
   },
 };
 
