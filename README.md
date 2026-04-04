@@ -1,70 +1,198 @@
-# Getting Started with Create React App
+# SEN-BEACON: AI Mosquito Trap Monitoring Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## About
 
-## Available Scripts
+SEN-BEACON (formerly AiMT) is a web-based dashboard for monitoring AI-powered mosquito traps deployed in Senegal. The application provides real-time visualization of environmental sensor data, mosquito activity patterns, and species classification from smart traps designed to aid vector-borne disease surveillance.
 
-In the project directory, you can run:
+The dashboard is currently configured to monitor a trap located in **Thies, Senegal** (14.7833, -16.9214).
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Dashboard Overview
+The main dashboard presents a unified view of trap performance through five stat cards and three visualization panels:
 
-### `npm test`
+- **Stat Cards** -- Temperature (C), Atmospheric Pressure (hPa), Total Mosquitoes Caught, Battery Level (%), and Trap Status (Online/Offline)
+- **Mosquito Activity Bar Chart** -- Hourly catch count showing peak activity during dusk and dawn hours
+- **Species Breakdown Pie Chart** -- Distribution across identified species: *Aedes aegypti*, *Anopheles*, and *Culex*
+- **Temperature & Pressure Line Chart** -- 24-hour dual-axis environmental readings
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Dedicated Pages
 
-### `npm run build`
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | Dashboard | Main overview with stats, charts, and species breakdown |
+| `/activity` | Mosquito Activity | Full-screen bar chart of hourly mosquito catch counts |
+| `/temperature` | Temperature & Pressure | Dual-axis line chart tracking environmental conditions over 24 hours |
+| `/timeline` | Activity Over Time | Line chart with a reference threshold line marking high activity (100+ catches) |
+| `/map` | Trap Location | Interactive Leaflet map showing the trap's GPS position in Thies, Senegal |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### UI Features
+- **Dark/Light Mode** -- Toggle between dark (default) and light themes via the top bar
+- **Collapsible Sidebar** -- Navigation menu that can be collapsed for more screen space; displays trap name and location info
+- **Responsive Layout** -- Grid-based design that adapts to different screen sizes
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Tech Stack
 
-### `npm run eject`
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| Framework | React | 19.2.4 |
+| Routing | React Router DOM | 6.30.3 |
+| UI Library | Material-UI (MUI) | 7.3.9 |
+| CSS-in-JS | Emotion | 11.14.x |
+| Charts | Recharts | 3.8.0 |
+| Maps | Leaflet + React-Leaflet | 1.9.4 / 5.0.0 |
+| Sidebar | React Pro Sidebar | 0.7.1 |
+| Build Tool | Create React App (react-scripts) | 5.0.1 |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Project Structure
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```
+SEN-BEACON/
+├── public/
+│   ├── index.html            # HTML entry point
+│   ├── manifest.json         # PWA manifest
+│   ├── favicon.ico           # App favicon
+│   └── robots.txt
+├── src/
+│   ├── index.js              # React entry point, renders <App />
+│   ├── index.css             # Global styles (flexbox layout, scrollbar)
+│   ├── App.js                # Root component: routing, theme provider, layout
+│   ├── theme.js              # MUI theme config, color tokens, dark/light mode
+│   ├── assets/
+│   │   └── AIMTLogo.png      # Application logo
+│   ├── components/
+│   │   └── Header.jsx        # Reusable page header (title + subtitle)
+│   ├── data/
+│   │   ├── mockData.js       # Mock sensor readings, activity, species, trap stats
+│   │   └── mockGeoFeatures.js# GeoJSON feature collection (reserved for future use)
+│   └── scenes/
+│       ├── global/
+│       │   ├── Sidebar.jsx   # Collapsible navigation sidebar
+│       │   └── Topbar.jsx    # Top bar with search, theme toggle, settings icons
+│       ├── dashboard/
+│       │   └── index.jsx     # Main dashboard with stat cards and charts
+│       ├── activity/
+│       │   └── index.jsx     # Mosquito activity bar chart page
+│       ├── temperature/
+│       │   └── index.jsx     # Temperature & pressure line chart page
+│       ├── timeline/
+│       │   └── index.jsx     # Activity over time with threshold reference line
+│       └── map/
+│           └── index.jsx     # Leaflet map showing trap location
+├── package.json
+├── package-lock.json
+├── .gitignore
+└── README.md
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Architecture
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Component Pattern
+All components are **functional components** using React hooks (`useState`, `useContext`, `useMemo`). There are no class components.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Theme System
+The theme is managed through React Context API:
 
-### Code Splitting
+1. `tokens(mode)` -- Returns a color palette object (grey, primary, greenAccent, redAccent, blueAccent) with values inverted between dark and light modes
+2. `themeSettings(mode)` -- Constructs a full MUI theme using the token palette
+3. `ColorModeContext` -- Provides a `toggleColorMode()` function to all components via context
+4. `useMode()` -- Custom hook that returns the current MUI theme and the color mode context value
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### State Management
+- **Theme state** -- Managed via `useState` in `useMode()`, toggled through `ColorModeContext`
+- **Sidebar state** -- Local `useState` for collapsed/expanded toggle
+- No external state management library (Redux, Zustand, etc.) is used
 
-### Analyzing the Bundle Size
+### Data Flow
+All data is currently sourced from `src/data/mockData.js`. The mock data simulates:
+- **Temperature readings** -- 12 data points across 24 hours (26-38 C range)
+- **Pressure readings** -- Corresponding atmospheric pressure (1008-1013 hPa)
+- **Mosquito activity** -- Hourly catch counts showing bimodal peaks at dawn (~120) and dusk (~134)
+- **Species classification** -- Three species with percentage distribution
+- **Trap statistics** -- Current sensor readings and device status
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## Data Model
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Trap Statistics
+```javascript
+{
+  temperature: 34,        // Celsius
+  pressure: 1010,         // hPa
+  mosquitoCount: 1243,    // Total caught
+  status: "Online",       // Device status
+  battery: 87,            // Percentage
+  location: "Thies, Senegal"
+}
+```
 
-### Advanced Configuration
+### Mosquito Activity (per 2-hour interval)
+```javascript
+{ hour: "20:00", count: 134 }
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Species Classification
+```javascript
+{ id: "Aedes aegypti", label: "Aedes aegypti", value: 45, color: "hsl(...)" }
+```
 
-### Deployment
+### Environmental Readings
+```javascript
+{ time: "14:00", temperature: 38, pressure: 1008 }
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## Getting Started
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Prerequisites
+- Node.js >= 18
+- npm >= 9
+
+### Installation
+```bash
+git clone https://github.com/mbayestark/SEN-BEACON.git
+cd SEN-BEACON
+npm install
+```
+
+### Development
+```bash
+npm start
+```
+Opens the app at [http://localhost:3000](http://localhost:3000). Hot-reloads on file changes.
+
+### Production Build
+```bash
+npm run build
+```
+Outputs an optimized bundle to the `build/` directory.
+
+---
+
+## Current Limitations
+
+- **Mock data only** -- No backend or API integration; all data is hardcoded
+- **Single trap** -- Dashboard is configured for one trap location
+- **No authentication** -- No user login or access control
+- **No persistent storage** -- Theme preference resets on page reload
+
+---
+
+## Future Considerations
+
+- Connect to a live backend API for real-time sensor data ingestion
+- Support multiple trap deployments with a trap selection interface
+- Add historical data views with date range filtering
+- Implement user authentication and role-based access
+- Integrate push notifications for trap alerts (low battery, offline, high activity)
+- Replace mock data with WebSocket or MQTT for live streaming updates
